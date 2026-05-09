@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>HabitFlow – Your Daily Growth Tracker</title>
+
+  <!-- ─── FONTS ─── -->
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+
+  <!-- ─── EMAILJS (for OTP email sending) ─── -->
+  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+
+  <!-- ─── CSS FILES ─── -->
+  <link rel="stylesheet" href="css/style.css"/>   <!-- shared styles, navbar, layout -->
+  <link rel="stylesheet" href="css/pages.css"/>   <!-- page-specific styles -->
+  <link rel="stylesheet" href="css/pages.css"/>
+
+  <!-- ADD THIS BELOW ↓ -->
+  <style>
+    .page { display: none; }
+    .page.active { display: block; }
+  </style>
+</head>
+</head>
+<body>
+
+<!-- ─── ANIMATED BACKGROUND ─── -->
+<div class="bg-orbs">
+  <div class="orb orb1"></div>
+  <div class="orb orb2"></div>
+  <div class="orb orb3"></div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     NAVBAR (hidden until logged in)
+════════════════════════════════════════ -->
+<nav id="mainNav" style="display:none">
+  <div class="nav-brand">HabitFlow ✦</div>
+
+  <div class="nav-links">
+    <button class="nav-tab active" onclick="switchMainTab('dashboard', this)">🏠 Dashboard</button>
+    <button class="nav-tab"        onclick="switchMainTab('today', this)">📅 Today</button>
+    <button class="nav-tab"        onclick="switchMainTab('progress', this)">📊 Progress</button>
+    <button class="nav-tab"        onclick="switchMainTab('manage', this)">⚙️ Manage</button>
+  </div>
+
+  <div class="profile-wrap">
+    <button class="profile-btn" id="profileBtn" onclick="toggleDropdown()">👤</button>
+    <div class="profile-dropdown" id="profileDropdown">
+      <div class="dd-header">
+        <div class="dd-name"  id="ddName">—</div>
+        <div class="dd-email" id="ddEmail">—</div>
+      </div>
+      <div class="dd-item" onclick="switchMainTab('profile', null); closeDropdown()">✏️ Edit Profile</div>
+      <div class="dd-item danger" onclick="logout()">🚪 Log Out</div>
+    </div>
+  </div>
+</nav>
+
+<!-- ═══════════════════════════════════════
+     PAGES
+════════════════════════════════════════ -->
+<div class="content">
+
+  <!-- ─── AUTH PAGE ─── -->
+  <div class="page active" id="page-auth">
+    <div class="auth-wrap">
+      <div class="auth-card">
+        <div class="auth-logo">HabitFlow ✦</div>
+        <div class="auth-sub">Build better habits, one day at a time.</div>
+
+        <!-- Login / Signup toggle -->
+        <div class="auth-toggle" id="authToggle">
+          <button class="auth-toggle-btn active" onclick="setAuthMode('login', this)">Sign In</button>
+          <button class="auth-toggle-btn"        onclick="setAuthMode('signup', this)">Sign Up</button>
+        </div>
+
+        <!-- LOGIN FORM -->
+        <div id="loginForm">
+          <div class="form-group">
+            <label class="form-label">Email</label>
+            <input class="form-input" id="loginEmail" type="email" placeholder="you@example.com"/>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Password</label>
+            <input class="form-input" id="loginPassword" type="password" placeholder="••••••••"/>
+          </div>
+          <button class="auth-btn" onclick="handleLogin()">Sign In →</button>
+        </div>
+
+        <!-- SIGNUP FORM -->
+        <div id="signupForm" style="display:none">
+          <div class="form-group">
+            <label class="form-label">Full Name</label>
+            <input class="form-input" id="signupName" placeholder="Your name"/>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Email</label>
+            <input class="form-input" id="signupEmail" type="email" placeholder="you@example.com"/>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Password</label>
+            <input class="form-input" id="signupPassword" type="password" placeholder="At least 6 characters"/>
+          </div>
+          <button class="auth-btn" onclick="handleSignup()">Create Account →</button>
+        </div>
+
+        <!-- OTP VERIFICATION -->
+        <div class="otp-wrap" id="otpWrap">
+          <div class="otp-info">📧 A 6-digit verification code has been sent to your email. Check your inbox (and spam folder).</div>
+          <!-- Dev mode: shows OTP on screen when EmailJS is not configured -->
+          <div id="otpDevBanner" style="display:none;background:rgba(255,159,67,0.15);border:1px solid rgba(255,159,67,0.4);border-radius:10px;padding:12px 16px;margin-bottom:16px;font-size:.95rem;font-weight:700;color:#ff9f43;letter-spacing:.1em;text-align:center"></div>
+          <div class="otp-inputs" id="otpInputs">
+            <input class="otp-input" maxlength="1" type="text" inputmode="numeric" onInput="otpNext(this,0)" onKeydown="otpBack(event,0)"/>
+            <input class="otp-input" maxlength="1" type="text" inputmode="numeric" onInput="otpNext(this,1)" onKeydown="otpBack(event,1)"/>
+            <input class="otp-input" maxlength="1" type="text" inputmode="numeric" onInput="otpNext(this,2)" onKeydown="otpBack(event,2)"/>
+            <input class="otp-input" maxlength="1" type="text" inputmode="numeric" onInput="otpNext(this,3)" onKeydown="otpBack(event,3)"/>
+            <input class="otp-input" maxlength="1" type="text" inputmode="numeric" onInput="otpNext(this,4)" onKeydown="otpBack(event,4)"/>
+            <input class="otp-input" maxlength="1" type="text" inputmode="numeric" onInput="otpNext(this,5)" onKeydown="otpBack(event,5)"/>
+          </div>
+          <button class="auth-btn" onclick="verifyOTP()">Verify Email ✓</button>
+          <div class="resend-link">Didn't get it? <span onclick="resendOTP()">Resend code</span></div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── DASHBOARD PAGE ─── -->
+  <div class="page" id="page-dashboard">
+    <div class="container">
+      <div class="dash-greeting fade-up">
+        <h2 id="greetMsg">Good morning! 👋</h2>
+        <p  id="greetSub">Here's your habit overview for today.</p>
+      </div>
+      <div class="dash-grid">
+        <div class="dash-stat" style="--glow:var(--c4)">
+          <div class="dash-stat-num" id="ds-total"  style="color:var(--c4)">0</div>
+          <div class="dash-stat-label">Total Habits</div>
+        </div>
+        <div class="dash-stat" style="--glow:var(--c3)">
+          <div class="dash-stat-num" id="ds-done"   style="color:var(--c3)">0</div>
+          <div class="dash-stat-label">Done Today</div>
+        </div>
+        <div class="dash-stat" style="--glow:var(--c6)">
+          <div class="dash-stat-num" id="ds-streak" style="color:var(--c6)">0</div>
+          <div class="dash-stat-label">Best Streak 🔥</div>
+        </div>
+        <div class="dash-stat" style="--glow:var(--c5)">
+          <div class="dash-stat-num" id="ds-rate"   style="color:var(--c5)">0%</div>
+          <div class="dash-stat-label">Week Rate</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── TODAY PAGE ─── -->
+  <div class="page" id="page-today">
+    <div class="container">
+      <h2 style="margin-bottom:24px;font-size:1.8rem">📅 Today's Habits</h2>
+
+      <!-- Mood Tracker -->
+      <div class="mood-section">
+        <div class="section-title">How are you feeling?</div>
+        <div class="moods">
+          <button class="mood-btn" onclick="setMood(this,'😄','Amazing')">😄 Amazing</button>
+          <button class="mood-btn" onclick="setMood(this,'😊','Good')">😊 Good</button>
+          <button class="mood-btn" onclick="setMood(this,'😐','Okay')">😐 Okay</button>
+          <button class="mood-btn" onclick="setMood(this,'😔','Low')">😔 Low</button>
+          <button class="mood-btn" onclick="setMood(this,'😤','Stressed')">😤 Stressed</button>
+        </div>
+      </div>
+
+      <!-- Progress Bar -->
+      <div class="prog-bar-card">
+        <div style="flex:1">
+          <div style="font-weight:700;margin-bottom:8px">Today's Progress</div>
+          <div class="prog-bar-track">
+            <div class="prog-bar-fill" id="today-progBar" style="width:0%"></div>
+          </div>
+        </div>
+        <div class="prog-pct" id="today-progPct">0%</div>
+      </div>
+
+      <!-- Habits List -->
+      <div class="habits-grid" id="todayHabitsList"></div>
+    </div>
+  </div>
+
+  <!-- ─── PROGRESS PAGE ─── -->
+  <div class="page" id="page-progress">
+    <div class="container">
+      <h2 style="margin-bottom:24px;font-size:1.8rem">📊 Progress</h2>
+
+      <!-- Stats -->
+      <div class="stats-grid">
+        <div class="stat-card" style="--glow:var(--c4)">
+          <div class="stat-num" id="stat-total">0</div>
+          <div class="stat-label">Total Habits</div>
+        </div>
+        <div class="stat-card" style="--glow:var(--c3)">
+          <div class="stat-num" id="stat-streak">0</div>
+          <div class="stat-label">Best Streak 🔥</div>
+        </div>
+        <div class="stat-card" style="--glow:var(--c2)">
+          <div class="stat-num" id="stat-rate">0%</div>
+          <div class="stat-label">Completion Rate</div>
+        </div>
+      </div>
+
+      <!-- Heatmap -->
+      <div class="heatmap-card">
+        <div class="heatmap-title">📅 Last 28 Days Activity</div>
+        <div class="hm-labels">
+          <div class="hm-label">Su</div><div class="hm-label">Mo</div><div class="hm-label">Tu</div>
+          <div class="hm-label">We</div><div class="hm-label">Th</div><div class="hm-label">Fr</div><div class="hm-label">Sa</div>
+        </div>
+        <div class="heatmap-grid" id="heatmapGrid"></div>
+        <div style="display:flex;align-items:center;gap:6px;margin-top:12px;font-size:.75rem;color:var(--muted)">
+          <span>Less</span>
+          <div style="width:12px;height:12px;border-radius:3px;background:var(--card)"></div>
+          <div style="width:12px;height:12px;border-radius:3px;background:rgba(77,150,255,.2)"></div>
+          <div style="width:12px;height:12px;border-radius:3px;background:rgba(77,150,255,.45)"></div>
+          <div style="width:12px;height:12px;border-radius:3px;background:rgba(77,150,255,.7)"></div>
+          <div style="width:12px;height:12px;border-radius:3px;background:var(--c4)"></div>
+          <span>More</span>
+        </div>
+      </div>
+
+      <!-- Mood Chart -->
+      <div class="mood-chart-card">
+        <div class="heatmap-title">😊 Mood This Week</div>
+        <div class="mood-bars" id="moodBars"></div>
+      </div>
+
+      <!-- Habit Breakdown -->
+      <div class="breakdown-card">
+        <div class="heatmap-title">🏆 Habit Completion Breakdown</div>
+        <div id="breakdownList"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── MANAGE PAGE ─── -->
+  <div class="page" id="page-manage">
+    <div class="container">
+      <h2 style="margin-bottom:24px;font-size:1.8rem">⚙️ Manage Habits</h2>
+
+      <!-- Add Habit Form -->
+      <div class="add-section">
+        <div class="section-title" style="margin-bottom:14px">Add New Habit</div>
+        <div class="add-row">
+          <input class="habit-input" id="habitName"  placeholder="e.g. Morning Run, Read 20 pages..." maxlength="40"/>
+          <input class="habit-input" id="habitEmoji" placeholder="Emoji 🎯" style="max-width:80px" maxlength="4"/>
+          <div class="color-pick" id="colorPick"></div>
+          <button class="add-btn" onclick="addHabit()">+ Add</button>
+        </div>
+      </div>
+
+      <!-- Habits List -->
+      <div class="habits-grid" id="manageList"></div>
+    </div>
+  </div>
+
+  <!-- ─── PROFILE PAGE ─── -->
+  <div class="page" id="page-profile">
+    <div class="container">
+      <h2 style="margin-bottom:28px;font-size:1.8rem">👤 Edit Profile</h2>
+      <div class="profile-page">
+        <div class="profile-avatar-wrap">
+          <div class="profile-avatar" id="profileAvatar">👤</div>
+          <div class="profile-change">Change avatar emoji</div>
+          <input class="form-input" id="avatarEmoji" placeholder="Paste emoji" style="width:100px;text-align:center;margin-top:8px"/>
+        </div>
+        <div class="profile-form">
+          <div class="form-group" style="margin-bottom:0">
+            <label class="form-label">Full Name</label>
+            <input class="form-input" id="profileName" placeholder="Your full name"/>
+          </div>
+          <div class="form-group" style="margin-bottom:0">
+            <label class="form-label">Email</label>
+            <input class="form-input" id="profileEmail" type="email" disabled style="opacity:.5;cursor:not-allowed"/>
+          </div>
+          <div class="form-group" style="margin-bottom:0">
+            <label class="form-label">New Password (leave blank to keep)</label>
+            <input class="form-input" id="profilePassword" type="password" placeholder="••••••••"/>
+          </div>
+          <button class="save-btn" onclick="saveProfile()">Save Changes</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /content -->
+
+<!-- ═══════════════════════════════════════
+     FOOTER (hidden until logged in)
+════════════════════════════════════════ -->
+<footer id="mainFooter" style="display:none">
+  <div class="footer-quote">
+    <strong id="footerMoodLabel">Your mood today</strong>
+    <span id="footerQuote" style="opacity:.6;font-style:italic">Log your mood to get a personalized quote…</span>
+  </div>
+  <div class="footer-mood-chip" id="footerMoodChip">—</div>
+</footer>
+
+<!-- ═══════════════════════════════════════
+     MODALS
+════════════════════════════════════════ -->
+<!-- Delete Confirmation -->
+<div class="modal-overlay" id="deleteModal">
+  <div class="modal">
+    <h3>🗑️ Delete Habit?</h3>
+    <p style="color:var(--muted);font-size:.9rem;margin-top:-8px">This will permanently remove this habit and all its history.</p>
+    <div class="modal-btns">
+      <button class="modal-btn cancel"  onclick="closeModal()">Cancel</button>
+      <button class="modal-btn confirm" onclick="confirmDelete()">Delete</button>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Habit -->
+<div class="modal-overlay" id="editModal">
+  <div class="modal">
+    <h3>✏️ Edit Habit</h3>
+    <div class="form-group">
+      <label class="form-label">Name</label>
+      <input class="form-input" id="editName" placeholder="Habit name"/>
+    </div>
+    <div class="form-group" style="margin-top:12px">
+      <label class="form-label">Emoji</label>
+      <input class="form-input" id="editEmoji" placeholder="Emoji" style="width:80px"/>
+    </div>
+    <div class="modal-btns">
+      <button class="modal-btn cancel"       onclick="closeModal()">Cancel</button>
+      <button class="modal-btn confirm-blue" onclick="confirmEdit()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast notification -->
+<div class="toast" id="toast"></div>
+
+<!-- ═══════════════════════════════════════
+     JAVASCRIPT FILES
+     Order matters! data.js must come first.
+════════════════════════════════════════ -->
+
+<script src="js/data.js"></script>       <!-- 1. data & helpers (load first!) -->
+<script src="js/auth.js"></script>       <!-- 2. login, signup, OTP, logout -->
+<script src="js/habits.js"></script>     <!-- 3. CRUD operations for habits -->
+<script src="js/progress.js"></script>   <!-- 4. charts, mood, stats -->
+<script src="js/app.js"></script>        <!-- 5. navigation, profile, init (load last!) -->
+
+</body>
+</html>
